@@ -1,3 +1,5 @@
+const {StatusCodes} = require('http-status-codes');
+
 const globalErrorHandler = (err, req, res, next) => {
     // Default to 500 if it's not a custom AppError
     const statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;

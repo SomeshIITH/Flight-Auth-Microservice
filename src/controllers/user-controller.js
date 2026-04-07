@@ -78,11 +78,11 @@ const isAuthenticated = async(req,res,next) => {
 }
 const isAdmin = async(req,res,next) => {
     try{
-        const response = await userService.isAdmin(req.body.id);
+        const response = await userService.isAdmin(req.params.id);
         return res.status(StatusCodes.OK).json({
             data : response,
             success : true,
-            message : "You are an admin",
+            message : response ? "User is an admin" : "User is NOT an admin",
             err : {}
         })
     }catch(error){
