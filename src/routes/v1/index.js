@@ -4,8 +4,8 @@ const router = express.Router();
 
 const {UserController} = require('./../../controllers/index')
 // const {AuthRequestMiddleWareValidate} = require('./../../middlewares/index')
-const {userSchema} = require('./../../utils/user-validator');
-const {validate} = require('./../../middlewares/validate-request.js');
+const userSchema = require('./../../utils/user-validator');
+const validate = require('./../../middlewares/validate-request.js');
 
 //public routes
 router.post('/users/signup',validate(userSchema),UserController.signUp);
