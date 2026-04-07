@@ -1,47 +1,25 @@
+const { up } = require('../migrations/20260405052356-create-user');
 const {UserService} = require('./../service/index');
 const {StatusCodes} = require('http-status-codes');
 const userService = new UserService();
 
 
-const signUp = async(req,res) => {
+const signUp = async(req,res,next) => {
     try{
-        const user = await userService.createUser(req.body);
+        const jwttoken = await userService.signUp(req.body);
         return res.status(StatusCodes.CREATED).json({
-            data : user,
+            data : jwttoken,
             success : true,
-            message : "Successfully created a new user",
+            message : "Successfully created a new user and return jwt",
             err : {}
         })
     }catch(error){
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            data : {},
-            success : false,
-            message : "Something went wrong in the controller layer",
-            err : {message : error.message}
-        })
+        next(error);
     }
 }
 
-const create = async(req,res) => {
-    try{
-        const user = await userService.createUser(req.body);
-        return res.status(StatusCodes.CREATED).json({
-            data : user,
-            success : true,
-            message : "Successfully created a new user",
-            err : {}
-        })
-    }catch(error){
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            data : {},
-            success : false,
-            message : "Something went wrong in the controller layer",
-            err : {message : error.message}
-        })
-    }
-}
 
-const get = async(req,res) => {
+const get = async(req,res,next) => {
     try{
         const user = await userService.getUser(req.params.id);
         return res.status(StatusCodes.OK).json({
@@ -51,16 +29,11 @@ const get = async(req,res) => {
             err : {}
         })
     }catch(error){
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            data : {},
-            success : false,
-            message : "Something went wrong in the controller layer",
-            err : {message : error.message}
-        })
+       next(error);
     }
 }
 
-const destroy = async(req,res) => {
+const destroy = async(req,res,next) => {
     try{
         await userService.deleteUser(req.params.id);
         return res.status(StatusCodes.OK).json({
@@ -70,35 +43,25 @@ const destroy = async(req,res) => {
             err : {}
         })
     }catch(error){
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            data : {},
-            success : false,
-            message : "Something went wrong in the controller layer",
-            err : {message : error.message}
-        })
+        next(error);
     }
 }
 
-const signIn = async(req,res) => {
+const signIn = async(req,res,next) => {
     try{
-        const response = await userService.signIn(req.body.email,req.body.password);
+        const jwttoken = await userService.signIn(req.body.email,req.body.password);
         return res.status(StatusCodes.OK).json({
-            data : response,
+            data : jwttoken,
             success : true,
             message : "Successfully signed in",
             err : {}
         })
     }catch(error){
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            data : {},
-            success : false,
-            message : "Something went wrong in the controller layer",
-            err : {message : error.message}
-        })
+        next(error);
     }
 }
 
-const isAuthenticated = async(req,res) => {
+const isAuthenticated = async(req,res,next) => {
     try{
         const token = req.headers["x-access-token"];
         const response = await userService.isAuthenticated(token);
@@ -110,15 +73,10 @@ const isAuthenticated = async(req,res) => {
             err : {}
         })
     }catch(error){
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            data : {},
-            success : false,
-            message : "You are not authenticated",
-            err : {message : error.message}
-        })
+        next(error);
     }
 }
-const isAdmin = async(req,res) => {
+const isAdmin = async(req,res,next) => {
     try{
         const response = await userService.isAdmin(req.body.id);
         return res.status(StatusCodes.OK).json({
@@ -128,20 +86,29 @@ const isAdmin = async(req,res) => {
             err : {}
         })
     }catch(error){
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            data : {},
-            success : false,
-            message : "You are not an admin",
-            err : {message : error.message}
+        next(error);
+    }
+}
+
+const updateRole = async(req,res,next) => {
+    try{
+        const response = await userService.updateRole(req.body.id,req.body.role);
+        return res.status(StatusCodes.OK).json({
+            data : response,
+            success : true,
+            message : "You are an admin",
+            err : {}
         })
+    }catch(error){
+        next(error);
     }
 }
 module.exports = {
     signUp,
-    create,
     get,
     destroy,
     signIn,
     isAuthenticated,
-    isAdmin
+    isAdmin,
+    updateRole
 }

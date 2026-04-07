@@ -107,6 +107,14 @@ class UserService{
             throw error;
         }
     }
+    async updateRole(userId,newRole){
+        try{
+            const response = await this.userrepo.updateRole(userId,newRole);
+            return response;
+        }catch(error){
+            throw error;
+        }
+    }
 
 }
 
