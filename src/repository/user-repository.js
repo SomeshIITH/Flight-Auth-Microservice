@@ -1,24 +1,28 @@
-const {User,Role} = require('./../models/index')
+const {User} = require('./../models/index')
+const { StatusCodes} = require('http-status-codes');
+const AppError = require('./../utils/app-error')
 
 class UserRepository{
 
     async createUser(data){
         try{ 
             const user = await User.create(data);
+            if(!user)throw new AppError("Use not created",StatusCodes.BAD_REQUEST);
             return user;
         }catch(error){
-            console.log("Something went wrong in the repository layer");
+            if(error.name == 'SequelizeUniqueConstraintError')throw new AppError("User already Exist with this email",StatusCodes.CONFLICT);
              throw error;
         }
     }
     async getUser(id){
         try{ 
             const user = await User.findByPk(id,{
-                attributes : ['email','id']     //because we make jwt token by email and useid not passord
+                attributes : ['email','id','role']     //because we make jwt token by email and useid not passord
             });
+            if(!user)throw new AppError("User not found",StatusCodes.NOT_FOUND);
             return user;
         }catch(error){
-            console.log("Something went wrong in the repository layer");
+            // console.log("Something went wrong in the repository layer");
              throw error;
         }
     }
@@ -27,11 +31,10 @@ class UserRepository{
         try{
             // console.log("Finding user by email:", email);
             const user = await User.findOne({
-                where : {
-                    email : email
-                }
+                where : { email : email }
+                // attributes : ['email','id','role'] not need because we need password ifor bcrypt comparing
             })
-            // console.log("USER FOUND:", user);
+            if(!user)throw new AppError("User not found",StatusCodes.NOT_FOUND);
             return user;
         }catch(error){
             console.log("Something went wrong in the repository layer");
@@ -40,11 +43,7 @@ class UserRepository{
     }
     async deleteUser(id){
         try{ 
-            await User.destroy({
-                where : {
-                    id : id
-                }
-            });
+            await User.destroy({  where : { id : id}   });
         }catch(error){
             console.log("Something went wrong in the repository layer");
              throw error;
@@ -54,16 +53,24 @@ class UserRepository{
     async isAdmin(userId){
         try{
             const user = await User.findByPk(userId);
-            console.log(user);
-            const adminRole = await Role.findOne({
-                where : {
-                    name : "ADMIN"
-                }
-            })
-            return user.hasRole(adminRole); //magic method created by sequelize for many to many relation
+            if (!user) return false;
+            // Simplified check: No extra DB query for the Role table!
+            return user.role === 'ADMIN';
         }catch(error){
                 console.log("Something went wrong in the repository layer");
                 throw error;
+        }
+    }
+
+    async updateRole(userId, newRole) {
+        try {
+            const user = await User.findByPk(userId);
+            if (!user) throw new AppError('User not found', StatusCodes.NOT_FOUND);
+            user.role = newRole;
+            await user.save();
+            return user;
+        } catch (error) {
+            throw error;
         }
     }
 }
