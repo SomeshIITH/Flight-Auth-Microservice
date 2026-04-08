@@ -6,10 +6,13 @@ const db = require('./models/index.js');
 
 const globalErrorHandler = require('./middlewares/error-handler.js');
 
+const cookieParser = require('cookie-parser');
+
 const SetupServer = async () => {
     const app = express();
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
+    app.use(cookieParser());    //to read res.cookies from client
     app.use('/api' , apiRoutes);
     app.use(globalErrorHandler);
 

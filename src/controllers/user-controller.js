@@ -1,4 +1,3 @@
-const { up } = require('../migrations/20260405052356-create-user');
 const {UserService} = require('./../service/index');
 const {StatusCodes} = require('http-status-codes');
 const userService = new UserService();
@@ -7,6 +6,11 @@ const userService = new UserService();
 const signUp = async(req,res,next) => {
     try{
         const jwttoken = await userService.signUp(req.body);
+        // Set the cookie here too so they are logged in immediately!
+        res.cookie('jwttoken', jwttoken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000 // Fixed: camelCase maxAge
+        });
         return res.status(StatusCodes.CREATED).json({
             data : jwttoken,
             success : true,
@@ -50,6 +54,10 @@ const destroy = async(req,res,next) => {
 const signIn = async(req,res,next) => {
     try{
         const jwttoken = await userService.signIn(req.body.email,req.body.password);
+        res.cookie('jwttoken',jwttoken, {
+            httpOnly : true,    //Prevents JavaScript access (No XSS)
+            maxAge : 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+        })
         return res.status(StatusCodes.OK).json({
             data : jwttoken,
             success : true,
@@ -60,10 +68,24 @@ const signIn = async(req,res,next) => {
         next(error);
     }
 }
+const signOut = async(req,res,next) => {
+    try{
+        res.clearCookie('jwttoken'); // but still jwt will be valid till expiry which can be attacked 
+        return res.status(StatusCodes.OK).json({
+            data : {},
+            success : true,
+            message : "Successfully signed out",
+            err : {}
+        })
+    }catch(error){
+        next(error);
+    }
+}
 
 const isAuthenticated = async(req,res,next) => {
     try{
-        const token = req.headers["x-access-token"];
+        // const token = req.headers["x-access-token"];     //when not using cookie 
+        const token = req.cookies.jwttoken; // Instead of req.headers
         const response = await userService.isAuthenticated(token);
         // console.log("Response from service layer in controller isAuthenticated",response);
         return res.status(StatusCodes.OK).json({
@@ -110,5 +132,6 @@ module.exports = {
     signIn,
     isAuthenticated,
     isAdmin,
-    updateRole
+    updateRole,
+    signOut
 }

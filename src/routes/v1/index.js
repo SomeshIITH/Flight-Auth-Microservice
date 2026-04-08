@@ -10,6 +10,7 @@ const validate = require('./../../middlewares/validate-request.js');
 //public routes
 router.post('/users/signup',validate(userSchema),UserController.signUp);
 router.post('/users/signin',validate(userSchema),UserController.signIn);
+outer.post('users/signout', UserController.signOut);
 
 //admin access routes
 router.get('/users/isauthenticated',UserController.isAuthenticated);
